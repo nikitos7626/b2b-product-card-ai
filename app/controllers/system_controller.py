@@ -26,7 +26,7 @@ def health_check():
     """Легковесный health-check состояния сервиса и загруженных категорий."""
     return {
         "status": "ok",
-        "model": settings.openai_model,
-        "base_url": settings.openai_base_url,
+        "provider": "gemini",
+        "model": settings.gemini_model,
         "categories_loaded": len(card_service.validator.categories)
     }

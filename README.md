@@ -28,18 +28,10 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 ```
-В файле `.env` укажите API-ключ Google Gemini или OpenAI:
+В файле `.env` укажите API-ключ Google Gemini:
 ```ini
-# Google Gemini (по умолчанию)
-LLM_PROVIDER=gemini
 GEMINI_API_KEY=ваш_ключ_google_ai_studio
 GEMINI_MODEL=gemini-flash-lite-latest
-
-# Либо любой OpenAI-совместимый API
-# LLM_PROVIDER=openai
-# OPENAI_API_KEY=sk-...
-# OPENAI_BASE_URL=https://api.openai.com/v1
-# OPENAI_MODEL=gpt-4o-mini
 ```
 
 #### 3. Запуск веб-сервиса
