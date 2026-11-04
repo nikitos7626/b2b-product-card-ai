@@ -7,30 +7,94 @@ from app.schemas import LLMCardDraft
 
 
 class UniversalLLMClient:
-    """Универсальный клиент для работы с OpenAI-совместимыми LLM API через httpx.
-    Поддерживает: OpenAI (gpt-4o-mini, gpt-4o), OpenRouter, Groq, DeepSeek, Ollama, vLLM.
-    """
+    """Универсальный клиент с поддержкой Google Gemini и OpenAI-совместимых LLM API."""
 
     def __init__(self):
-        self.api_key = settings.openai_api_key
-        self.base_url = settings.openai_base_url.rstrip("/")
-        self.model = settings.openai_model
+        self.provider = settings.llm_provider
+        self.gemini_key = settings.gemini_api_key or os_key_fallback()
+        self.gemini_model = settings.gemini_model
+        
+        self.openai_key = settings.openai_api_key
+        self.openai_base_url = settings.openai_base_url.rstrip("/")
+        self.openai_model = settings.openai_model
+        
         self.timeout = 45.0
 
     def generate_draft(self, system_prompt: str, user_prompt: str) -> LLMCardDraft:
-        """Отправляет запрос к LLM API и возвращает структурированный черновик."""
+        """Отправляет запрос к LLM (Gemini или OpenAI) и возвращает структурированный черновик."""
         
-        # Если API-ключ не задан в .env, генерируем детерминированный оффлайн-черновик
-        if not self.api_key or self.api_key.startswith("your_api_key") or self.api_key == "none":
-            return self._generate_offline_mock(user_prompt)
+        # 1. Проверяем Google Gemini
+        if self._is_gemini_active():
+            return self._call_gemini(system_prompt, user_prompt)
+            
+        # 2. Проверяем OpenAI-совместимый API
+        if self._is_openai_active():
+            return self._call_openai(system_prompt, user_prompt)
+            
+        # 3. Детерминированный оффлайн-фоллбэк для локальных тестов
+        return self._generate_offline_mock(user_prompt)
 
-        url = f"{self.base_url}/chat/completions"
+    def _is_gemini_active(self) -> bool:
+        """Проверяет, активен ли Gemini."""
+        if self.gemini_key and not self.gemini_key.startswith("your_"):
+            return True
+        # Если ключ передан в openai_api_key, но формат гугловский (AQ. или AIza)
+        if self.openai_key and (self.openai_key.startswith("AQ.") or self.openai_key.startswith("AIza")):
+            self.gemini_key = self.openai_key
+            return True
+        return False
+
+    def _is_openai_active(self) -> bool:
+        """Проверяет, активен ли OpenAI."""
+        return bool(self.openai_key and not self.openai_key.startswith("your_"))
+
+    def _call_gemini(self, system_prompt: str, user_prompt: str) -> LLMCardDraft:
+        """Вызов Google Gemini через официальный REST API."""
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:generateContent?key={self.gemini_key}"
+        payload = {
+            "systemInstruction": {
+                "parts": [{"text": system_prompt}]
+            },
+            "contents": [
+                {"parts": [{"text": user_prompt}]}
+            ],
+            "generationConfig": {
+                "response_mime_type": "application/json",
+                "temperature": 0.2
+            }
+        }
+
+        try:
+            with httpx.Client(timeout=self.timeout) as client:
+                resp = client.post(url, json=payload)
+                
+            if resp.status_code == 400:
+                raise RuntimeError(f"Gemini API 400 Bad Request: {resp.text}")
+            elif resp.status_code == 403:
+                raise RuntimeError("Gemini API 403 Forbidden: недействительный API-ключ")
+            elif resp.status_code == 429:
+                raise RuntimeError("Gemini API 429: превышен лимит запросов в минуту (quota exceeded)")
+            elif resp.status_code >= 500:
+                raise RuntimeError(f"Gemini API {resp.status_code} Service Error: {resp.text}")
+
+            data = resp.json()
+            raw_content = data["candidates"][0]["content"]["parts"][0]["text"]
+            parsed_json = self._clean_and_parse_json(raw_content)
+            return LLMCardDraft.model_validate(parsed_json)
+        except Exception as e:
+            if "Gemini API" in str(e):
+                raise
+            raise RuntimeError(f"Ошибка вызова Gemini API: {e}")
+
+    def _call_openai(self, system_prompt: str, user_prompt: str) -> LLMCardDraft:
+        """Вызов OpenAI-совместимого API."""
+        url = f"{self.openai_base_url}/chat/completions"
         headers = {
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {self.openai_key}",
             "Content-Type": "application/json"
         }
         payload = {
-            "model": self.model,
+            "model": self.openai_model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -44,7 +108,7 @@ class UniversalLLMClient:
                 response = client.post(url, json=payload, headers=headers)
 
             if response.status_code == 401:
-                raise RuntimeError("Ошибка авторизации LLM API (401 Unauthorized): проверьте OPENAI_API_KEY в .env")
+                raise RuntimeError("Ошибка авторизации LLM API (401 Unauthorized)")
             elif response.status_code == 429:
                 raise RuntimeError("Превышен лимит запросов к LLM API (429 Rate Limit Exceeded)")
             elif response.status_code >= 400:
@@ -54,14 +118,9 @@ class UniversalLLMClient:
             raw_content = data["choices"][0]["message"]["content"]
             parsed_json = self._clean_and_parse_json(raw_content)
             return LLMCardDraft.model_validate(parsed_json)
-
-        except httpx.ConnectTimeout:
-            raise RuntimeError(f"Таймаут подключения к LLM API ({self.base_url})")
-        except httpx.ReadTimeout:
-            raise RuntimeError(f"Таймаут ожидания ответа модели ({self.timeout}с)")
-        except httpx.ConnectError as e:
-            raise RuntimeError(f"Сетевая ошибка подключения к LLM API ({self.base_url}): {e}")
         except Exception as e:
+            if "LLM API" in str(e):
+                raise
             raise RuntimeError(f"Ошибка при обработке ответа LLM: {e}")
 
     def _clean_and_parse_json(self, text: str) -> Dict[str, Any]:
@@ -153,3 +212,8 @@ class UniversalLLMClient:
                 },
                 llm_missing_fields=["Температура измеряемой среды", "Степень защиты корпуса IP", "Материал штуцера и корпуса"]
             )
+
+
+def os_key_fallback() -> str:
+    import os
+    return os.getenv("GEMINI_API_KEY", "")

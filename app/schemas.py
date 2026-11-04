@@ -1,5 +1,5 @@
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, field_validator
+from typing import Any, Dict, List, Optional, Union
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class ProductInput(BaseModel):
@@ -20,14 +20,21 @@ class ProductInput(BaseModel):
 
 class KeySpecItem(BaseModel):
     """Единичная характеристика прибора."""
-    parameter: str = Field(..., description="Наименование параметра (например, Диапазон измерений)")
-    value: str = Field(..., description="Значение параметра строго из исходных данных либо 'данных нет'")
+    parameter: str = Field(..., description="Наименование параметра")
+    value: str = Field(..., description="Значение параметра")
 
 
 class CommercialBlock(BaseModel):
     """Коммерческий блок для менеджера по продажам."""
-    target_audience: str = Field(..., description="Кому подходит прибор: отрасли, службы, предприятия")
-    tasks_solved: str = Field(..., description="Какие инженерные и эксплуатационные задачи решает прибор")
+    target_audience: str = Field(..., description="Кому подходит прибор")
+    tasks_solved: str = Field(..., description="Какие задачи решает")
+
+    @field_validator("target_audience", "tasks_solved", mode="before")
+    @classmethod
+    def list_to_string(cls, v: Any) -> str:
+        if isinstance(v, list):
+            return "; ".join(str(item) for item in v)
+        return str(v)
 
 
 class DataQualityReport(BaseModel):
@@ -41,12 +48,32 @@ class DataQualityReport(BaseModel):
 
 class LLMCardDraft(BaseModel):
     """Структурированный ответ от LLM."""
-    seo_title: str = Field(..., description="SEO-заголовок строго до 70 символов")
-    seo_description: str = Field(..., description="Техническое SEO-описание объемом от 800 до 1200 символов")
-    key_specs: List[KeySpecItem] = Field(..., description="Список характеристик. Значения строго из текста или 'данных нет'")
-    search_queries: List[str] = Field(..., description="3-5 релевантных поисковых запросов для страницы")
-    commercial_block: CommercialBlock = Field(..., description="Информация для менеджера по продажам")
-    llm_missing_fields: List[str] = Field(default_factory=list, description="Замеченные LLM пропуски данных")
+    seo_title: str = Field(..., description="SEO-заголовок до 70 символов")
+    seo_description: str = Field(..., description="SEO-описание от 800 до 1200 символов")
+    key_specs: List[KeySpecItem] = Field(..., description="Список характеристик")
+    search_queries: List[str] = Field(..., description="3-5 поисковых запросов")
+    commercial_block: CommercialBlock = Field(..., description="Информация для менеджера")
+    llm_missing_fields: List[str] = Field(default_factory=list, description="Замеченные пропуски")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_llm_response(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        # Если модель вернула key_specs как словарь {"диапазон": "0-10", ...}
+        specs_raw = data.get("key_specs")
+        if isinstance(specs_raw, dict):
+            converted = []
+            for k, v in specs_raw.items():
+                converted.append({"parameter": str(k).strip(), "value": str(v).strip()})
+            data["key_specs"] = converted
+
+        # Если модель назвала поле search_keywords вместо search_queries
+        if "search_queries" not in data and "search_keywords" in data:
+            data["search_queries"] = data["search_keywords"]
+
+        return data
 
 
 class DraftCardResponse(BaseModel):
