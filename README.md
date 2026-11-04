@@ -28,11 +28,11 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 ```
-В файле `.env` укажите API-ключ Google Gemini:
+В файле `.env` достаточно указать только API-ключ:
 ```ini
 GEMINI_API_KEY=ваш_ключ_google_ai_studio
-GEMINI_MODEL=gemini-flash-lite-latest
 ```
+*(Модель `gemini-flash-lite-latest` уже зашита в дефолтные настройки приложения, указывать `GEMINI_MODEL` не требуется).*
 
 #### 3. Запуск веб-сервиса
 ```bash
