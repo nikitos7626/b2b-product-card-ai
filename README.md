@@ -63,4 +63,4 @@ python test_20_categories.py
 - `app/schemas/` — Pydantic-модели валидации данных (`product.py`).
 - `app/services/` — сервис карточек (`card_service.py`), Gemini API клиент (`llm_client.py`), Grounding Verifier и нормализатор ГОСТ (`validator.py`).
 - `data/` — датасеты оборудования и таксономия 238 категорий КИПиА (`souz-pribor.ru`).
-- `output/` — готовые результаты генерации карточек ([product_1_result.md](output/product_1_result.md), [product_2_result.md](output/product_2_result.md)) и отчёт валидации по 20 категориям.
+- `output/` — готовые результаты генерации ([product_1_result.md](output/product_1_result.md), [product_2_result.md](output/product_2_result.md)), скриншоты интерфейса ([DM 02](output/screenshot_product_1_dm02.jpg), [ПД100](output/screenshot_product_2_pd100.jpg)) и отчёт валидации по 20 категориям.
