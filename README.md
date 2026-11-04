@@ -8,34 +8,31 @@
 
 ## 🚀 Быстрый запуск
 
-### Вариант А: Запуск через Docker (Рекомендуемый)
-```bash
-docker compose up --build
-```
-Сервис поднимется и будет доступен на `http://localhost:8000`.
-
-### Вариант Б: Локальный запуск на Python
-
-#### 1. Установка зависимостей
+### Шаг 1. Клонирование и настройка окружения
 ```bash
 git clone https://github.com/nikitos7626/b2b-product-card-ai.git
 cd b2b-product-card-ai
-pip install -r requirements.txt
-```
-
-#### 2. Настройка переменных окружения
-Скопируйте шаблон конфигурации:
-```bash
 cp .env.example .env
 ```
-В файле `.env` достаточно указать только API-ключ:
+В файле `.env` укажите ваш API-ключ Gemini:
 ```ini
 GEMINI_API_KEY=ваш_ключ_google_ai_studio
 ```
 *(Модель `gemini-flash-lite-latest` уже зашита в дефолтные настройки приложения, указывать `GEMINI_MODEL` не требуется).*
 
-#### 3. Запуск веб-сервиса
+---
+
+### Шаг 2. Запуск сервиса (выберите удобный способ)
+
+#### Способ 1: Запуск через Docker (Рекомендуемый)
 ```bash
+docker compose up --build
+```
+Сервис автоматически соберет контейнер и поднимется на `http://localhost:8000`.
+
+#### Способ 2: Локальный запуск на Python
+```bash
+pip install -r requirements.txt
 python -m app.main
 ```
 - **Интерактивный веб-интерфейс:** `http://localhost:8000`

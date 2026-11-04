@@ -1,9 +1,10 @@
+import io
 import sys
 import json
 import time
 from pathlib import Path
 
-if hasattr(sys.stdout, "reconfigure"):
+if isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from app.schemas import ProductInput
