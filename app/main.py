@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -37,6 +37,12 @@ async def read_index():
     if index_file.exists():
         return FileResponse(index_file)
     return {"message": "Веб-интерфейс доступен в /static/index.html"}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Заглушка для favicon, чтобы браузер не спамил 404 в логах."""
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @app.get("/api/health", summary="Проверка работоспособности сервиса")
