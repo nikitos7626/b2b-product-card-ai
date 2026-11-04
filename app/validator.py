@@ -1,7 +1,7 @@
 import re
 import json
 from pathlib import Path
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from app.schemas import KeySpecItem, DataQualityReport
 from app.config import settings
 
@@ -105,9 +105,9 @@ class TaxonomyAndGroundingValidator:
             except Exception:
                 self.categories = []
 
-    def match_category(self, name: str, description: str = "") -> Dict[str, Any]:
+    def match_category(self, name: str, description: Optional[str] = "") -> Dict[str, Any]:
         """Определяет категорию товара по наименованию и тексту описания."""
-        text = f"{name} {description}".lower()
+        text = f"{name or ''} {description or ''}".lower()
 
         # 1. Точные ключевые совпадения
         keywords_map = [
@@ -146,20 +146,20 @@ class TaxonomyAndGroundingValidator:
     def analyze_data_quality(
         self,
         name: str,
-        manufacturer: str,
-        specs: Dict[str, Any],
-        description: str,
-        category_info: Dict[str, Any]
+        manufacturer: Optional[str] = "",
+        specs: Optional[Dict[str, Any]] = None,
+        description: Optional[str] = "",
+        category_info: Optional[Dict[str, Any]] = None
     ) -> DataQualityReport:
         """Анализирует входные данные на отсутствие критических полей и наличие сомнительных значений."""
         missing: List[str] = []
         clarifications: List[str] = []
 
-        all_input_text = f"{name} {manufacturer} {description}".lower()
-        specs_lower = {k.lower(): str(v).strip() for k, v in specs.items()}
+        all_input_text = f"{name or ''} {manufacturer or ''} {description or ''}".lower()
+        specs_lower = {k.lower(): str(v).strip() for k, v in (specs or {}).items()}
 
         # 1. Проверка по обязательным полям категории
-        required_raw = category_info.get("required_specs", "")
+        required_raw = (category_info or {}).get("required_specs", "")
         required_list = [r.strip() for r in required_raw.split(";") if r.strip()]
 
         SYNONYM_STEMS = {

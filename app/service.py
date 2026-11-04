@@ -17,7 +17,7 @@ class ProductCardService:
         """Полный конвейер генерации и валидации черновика карточки."""
         
         # 1. Определение категории прибора в таксономии
-        category_info = self.validator.match_category(product.name, product.description)
+        category_info = self.validator.match_category(product.name, product.description or "")
         
         # 2. Анализ полноты входных данных
         data_quality = self.validator.analyze_data_quality(
