@@ -62,5 +62,5 @@ python test_20_categories.py
 - `app/service.py` — оркестрация пайплайна, генерация Markdown и Schema.org JSON-LD.
 - `app/validator.py` — детерминированный нормализатор ГОСТ, Grounding Verifier и таксономия КИПиА.
 - `app/llm_client.py` — легковесный клиент Google Gemini с экспоненциальным backoff.
-- `data/` — исходные тестовые приборы и база 238 категорий КИПиА (`souz-pribor.ru`).
-- `output/` — эталонные результаты генерации по тестовым приборам ([product_1_result.md](output/product_1_result.md), [product_2_result.md](output/product_2_result.md)) и полный отчёт по 20 категориям.
+- `data/` — датасеты оборудования и таксономия 238 категорий КИПиА (`souz-pribor.ru`).
+- `output/` — готовые результаты генерации карточек ([product_1_result.md](output/product_1_result.md), [product_2_result.md](output/product_2_result.md)) и отчёт валидации по 20 категориям.

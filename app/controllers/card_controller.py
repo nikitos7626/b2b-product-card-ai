@@ -38,11 +38,11 @@ def generate_card(product: ProductInput) -> DraftCardResponse:
 
 @router.get(
     "/examples/{example_id}",
-    summary="Получить тестовый пример товара (1 или 2)",
+    summary="Получить демонстрационный пример товара (1 или 2)",
     response_description="Предзаполненный JSON с реальными параметрами прибора"
 )
 def get_example_product(example_id: int):
-    """Возвращает предзаполненный JSON с данными по тестовым приборам."""
+    """Возвращает предзаполненный JSON с данными по демонстрационному оборудованию."""
     filename = f"product_{example_id}.json"
     file_path = settings.data_dir / filename
     if not file_path.exists():
