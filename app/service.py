@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from app.schemas import ProductInput, DraftCardResponse, KeySpecItem, DataQualityReport
 from app.prompt import SYSTEM_PROMPT, build_user_prompt
 from app.validator import TaxonomyAndGroundingValidator
@@ -140,7 +140,7 @@ class ProductCardService:
         schema_org_data = self._build_schema_org(
             title=seo_title,
             description=seo_description,
-            manufacturer=product.manufacturer,
+            manufacturer=product.manufacturer or "",
             category=data_quality.detected_category,
             specs=verified_specs
         )
@@ -215,7 +215,7 @@ class ProductCardService:
         self,
         title: str,
         description: str,
-        manufacturer: str,
+        manufacturer: Optional[str],
         category: str,
         specs: List[KeySpecItem]
     ) -> Dict[str, Any]:
