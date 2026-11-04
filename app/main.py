@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Response, status
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -13,15 +12,6 @@ app = FastAPI(
     title="AI-помощник подготовки карточек товаров B2B",
     description="Сервис генерации черновиков карточек контрольно-измерительных приборов для B2B интернет-магазина",
     version="1.0.0"
-)
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 # Монтирование статических файлов
