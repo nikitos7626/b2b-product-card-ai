@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from app.service import card_service
+from app.services import card_service
 from app.schemas import ProductInput
 
 def run():

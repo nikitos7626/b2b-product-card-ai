@@ -59,8 +59,8 @@ python test_20_categories.py
 ## 📁 Структура проекта и ключевые артефакты
 
 - `app/controllers/` — модульные контроллеры роутов (FastAPI APIRouter).
-- `app/service.py` — оркестрация пайплайна, генерация Markdown и Schema.org JSON-LD.
-- `app/validator.py` — детерминированный нормализатор ГОСТ, Grounding Verifier и таксономия КИПиА.
-- `app/llm_client.py` — легковесный клиент Google Gemini с экспоненциальным backoff.
+- `app/core/` — конфигурация приложения (`config.py`) и инженерные промпты (`prompt.py`).
+- `app/schemas/` — Pydantic-модели валидации данных (`product.py`).
+- `app/services/` — сервис карточек (`card_service.py`), Gemini API клиент (`llm_client.py`), Grounding Verifier и нормализатор ГОСТ (`validator.py`).
 - `data/` — датасеты оборудования и таксономия 238 категорий КИПиА (`souz-pribor.ru`).
 - `output/` — готовые результаты генерации карточек ([product_1_result.md](output/product_1_result.md), [product_2_result.md](output/product_2_result.md)) и отчёт валидации по 20 категориям.

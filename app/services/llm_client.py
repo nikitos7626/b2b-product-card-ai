@@ -3,7 +3,7 @@ import re
 import time
 from typing import Dict, Any
 import httpx
-from app.config import settings
+from app.core.config import settings
 from app.schemas import LLMCardDraft
 
 
@@ -83,5 +83,5 @@ class GeminiClient:
         return json.loads(clean)
 
 
-# Алиас для обратной совместимости
+# Алиас для единообразного импорта
 UniversalLLMClient = GeminiClient

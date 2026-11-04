@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.config import settings
+from app.core.config import settings
 from app.controllers import card_router, system_router
 
 

@@ -3,8 +3,12 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.schemas import ProductInput, KeySpecItem, LLMCardDraft, CommercialBlock
-from app.service import card_service
-from app.validator import TaxonomyAndGroundingValidator, normalize_spec_value, normalize_spec_key
+from app.services import (
+    card_service,
+    TaxonomyAndGroundingValidator,
+    normalize_spec_value,
+    normalize_spec_key,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -93,7 +97,7 @@ def mock_llm_for_unit_tests(monkeypatch):
                 llm_missing_fields=["Температура рабочей среды", "Степень защиты IP"]
             )
 
-    monkeypatch.setattr("app.llm_client.UniversalLLMClient.generate_draft", dummy_generate)
+    monkeypatch.setattr("app.services.llm_client.UniversalLLMClient.generate_draft", dummy_generate)
 
 
 @pytest.fixture

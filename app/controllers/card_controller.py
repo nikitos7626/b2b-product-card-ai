@@ -1,8 +1,8 @@
 import json
 from fastapi import APIRouter, HTTPException, status
-from app.config import settings
+from app.core.config import settings
 from app.schemas import ProductInput, DraftCardResponse
-from app.service import card_service
+from app.services.card_service import card_service
 
 router = APIRouter(prefix="/api", tags=["Product Cards"])
 

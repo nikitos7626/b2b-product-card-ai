@@ -8,7 +8,7 @@ if isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from app.schemas import ProductInput
-from app.service import card_service
+from app.services import card_service
 
 TEST_PRODUCTS = [
     # 1. Измерители-регуляторы

@@ -1,9 +1,9 @@
 import re
 from typing import Dict, Any, List, Optional
 from app.schemas import ProductInput, DraftCardResponse, KeySpecItem, DataQualityReport
-from app.prompt import SYSTEM_PROMPT, build_user_prompt
-from app.validator import TaxonomyAndGroundingValidator
-from app.llm_client import UniversalLLMClient
+from app.core.prompt import SYSTEM_PROMPT, build_user_prompt
+from app.services.validator import TaxonomyAndGroundingValidator
+from app.services.llm_client import UniversalLLMClient
 
 
 class ProductCardService:

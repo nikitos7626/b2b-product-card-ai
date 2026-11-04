@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional
 from app.schemas import KeySpecItem, DataQualityReport
-from app.config import settings
+from app.core.config import settings
 
 
 def normalize_spec_value(val: str) -> str:

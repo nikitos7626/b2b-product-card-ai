@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response, status
 from fastapi.responses import FileResponse
-from app.config import settings
-from app.service import card_service
+from app.core.config import settings
+from app.services.card_service import card_service
 
 router = APIRouter(tags=["System"])
 
