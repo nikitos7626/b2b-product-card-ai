@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.schemas import ProductInput, KeySpecItem
 from app.service import card_service
-from app.validator import TaxonomyAndGroundingValidator
+from app.validator import TaxonomyAndGroundingValidator, normalize_spec_value, normalize_spec_key
 
 
 @pytest.fixture
@@ -67,7 +67,7 @@ def test_grounding_verifier_flags_hallucinations():
     ]
 
     verified = val.verify_grounding(test_specs, input_payload)
-    assert verified[0].value == "0-1,6 МПа"
+    assert "1,6 МПа" in verified[0].value
     assert verified[1].value == "данных нет"
     assert "требует проверки источника" in verified[2].value
 
@@ -140,3 +140,56 @@ def test_api_generate_endpoint(client):
     assert "seo_title" in data
     assert data["seo_title_length"] <= 70
     assert len(data["key_specs"]) > 0
+
+
+def test_specs_value_and_key_normalization():
+    """Тестирование детерминированной нормализации единиц измерения и ключей КИПиА."""
+    # Значения
+    assert normalize_spec_value("0-1.6мпа") == "0–1,6 МПа"
+    assert normalize_spec_value("g 1/2") == "G1/2"
+    assert normalize_spec_value("g1/2\"") == "G1/2"
+    assert normalize_spec_value("м20*1.5") == "M20×1,5"
+    assert normalize_spec_value("4-20ма") == "4...20 мА"
+    assert normalize_spec_value("24в dc") == "24 В DC"
+    assert normalize_spec_value("+-0.5%") == "±0,5 %"
+    assert normalize_spec_value("100мм") == "100 мм"
+    assert normalize_spec_value("-50...+180 градусов цельсия") == "-50...+180 °C"
+    assert normalize_spec_value("none") == "данных нет"
+    assert normalize_spec_value("-") == "данных нет"
+
+    # Ключи
+    assert normalize_spec_key("диапазон") == "Диапазон измерений"
+    assert normalize_spec_key("присоединение") == "Присоединительная резьба"
+    assert normalize_spec_key("питание") == "Напряжение питания"
+    assert normalize_spec_key("диаметр") == "Диаметр корпуса"
+
+
+def test_grounding_normalizes_dirty_specs():
+    """Проверка, что грязные спецификации нормализуются при валидации."""
+    val = TaxonomyAndGroundingValidator()
+    input_payload = {
+        "name": "Манометр DM 02",
+        "manufacturer": "Манотомь",
+        "specs": {"диапазон": "0-1.6мпа", "штуцер": "g 1/2"},
+        "description": "корпус 100мм"
+    }
+
+    test_specs = [
+        KeySpecItem(parameter="диапазон", value="0-1.6мпа"),
+        KeySpecItem(parameter="присоединение", value="g 1/2"),
+        KeySpecItem(parameter="диаметр", value="100мм"),
+        KeySpecItem(parameter="температура", value="none")
+    ]
+
+    verified = val.verify_grounding(test_specs, input_payload)
+    
+    assert verified[0].parameter == "Диапазон измерений"
+    assert verified[0].value == "0–1,6 МПа"
+    
+    assert verified[1].parameter == "Присоединительная резьба"
+    assert verified[1].value == "G1/2"
+    
+    assert verified[2].parameter == "Диаметр корпуса"
+    assert verified[2].value == "100 мм"
+    
+    assert verified[3].value == "данных нет"

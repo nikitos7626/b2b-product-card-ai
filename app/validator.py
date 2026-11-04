@@ -6,6 +6,88 @@ from app.schemas import KeySpecItem, DataQualityReport
 from app.config import settings
 
 
+def normalize_spec_value(val: str) -> str:
+    """Детерминированная нормализация технических значений приборов КИПиА."""
+    if not val:
+        return "данных нет"
+    
+    v = str(val).strip()
+    if v.lower() in ["данных нет", "нет данных", "не указано", "н/д", "none", "null", "-", "—"]:
+        return "данных нет"
+    
+    # 1. Резьбы (G1/2, M20x1.5)
+    # G1/2", g 1/2, g1/2 -> G1/2
+    v = re.sub(r"\bg\s*(\d+/\d+)\b[\"']?", r"G\1", v, flags=re.IGNORECASE)
+    # M20x1.5, м20*1,5 -> M20×1,5
+    v = re.sub(r"[mм]\s*(\d+)\s*[*xх×]\s*(\d+([.,]\d+)?)", lambda m: f"M{m.group(1)}×{m.group(2).replace('.', ',')}", v, flags=re.IGNORECASE)
+    
+    # 2. Выходные электрические сигналы
+    v = re.sub(r"\b4\s*[-–—.]+\s*20\s*(?:ма|ma)\b", "4...20 мА", v, flags=re.IGNORECASE)
+    v = re.sub(r"\b0\s*[-–—.]+\s*20\s*(?:ма|ma)\b", "0...20 мА", v, flags=re.IGNORECASE)
+    v = re.sub(r"\b0\s*[-–—.]+\s*10\s*(?:в|v)\b", "0...10 В", v, flags=re.IGNORECASE)
+
+    # 3. Давление: МПа, кПа, бар
+    v = re.sub(r"(\d+)\s*[-–—]\s*(\d+([.,]\d+)?)\s*мпа", lambda m: f"{m.group(1)}–{m.group(2).replace('.', ',')} МПа", v, flags=re.IGNORECASE)
+    v = re.sub(r"(\d+)\s*[-–—]\s*(\d+([.,]\d+)?)\s*кпа", lambda m: f"{m.group(1)}–{m.group(2).replace('.', ',')} кПа", v, flags=re.IGNORECASE)
+    v = re.sub(r"(\d+([.,]\d+)?)\s*мпа", lambda m: f"{m.group(1).replace('.', ',')} МПа", v, flags=re.IGNORECASE)
+    v = re.sub(r"(\d+([.,]\d+)?)\s*кпа", lambda m: f"{m.group(1).replace('.', ',')} кПа", v, flags=re.IGNORECASE)
+    v = re.sub(r"(\d+([.,]\d+)?)\s*бар\b", lambda m: f"{m.group(1).replace('.', ',')} бар", v, flags=re.IGNORECASE)
+
+    # 4. Линейные размеры (мм)
+    v = re.sub(r"(\d+)\s*мм\.?", r"\1 мм", v, flags=re.IGNORECASE)
+
+    # 5. Температура (°C)
+    v = re.sub(r"([-+]?\d+)\s*[-–—.]+\s*([-+]?\d+)\s*(?:°\s*[cс]|град(?:ус(?:ов|а)?)?(?:\s*цельси(?:я|е)?)?)", r"\1...\2 °C", v, flags=re.IGNORECASE)
+    v = re.sub(r"([-+]?\d+)\s*(?:°\s*[cс]|град(?:ус(?:ов|а)?)?(?:\s*цельси(?:я|е)?)?)", r"\1 °C", v, flags=re.IGNORECASE)
+
+    # 6. Питание (В DC / В AC)
+    v = re.sub(r"(\d+)\s*[-–—.]+\s*(\d+)\s*(?:в|v)\s*(?:dc|пост(?:оянного)?(?:\s*тока)?)", r"\1...\2 В DC", v, flags=re.IGNORECASE)
+    v = re.sub(r"(\d+)\s*(?:в|v)\s*(?:dc|пост(?:оянного)?(?:\s*тока)?)", r"\1 В DC", v, flags=re.IGNORECASE)
+    v = re.sub(r"(\d+)\s*(?:в|v)\s*(?:ac|перем(?:енного)?(?:\s*тока)?)", r"\1 В AC", v, flags=re.IGNORECASE)
+
+    # 7. Погрешность (+-0.5%, +/- 0.5 %)
+    v = re.sub(r"(?:\+\s*/\s*-|\+-\s*|±\s*)(\d+([.,]\d+)?)\s*%", lambda m: f"±{m.group(1).replace('.', ',')} %", v)
+
+    # 8. Запятая в десятичных дробях для одиночных чисел (1.5 -> 1,5)
+    if re.match(r"^[-+]?\d+\.\d+$", v):
+        v = v.replace(".", ",")
+
+    return v.strip()
+
+
+def normalize_spec_key(key: str) -> str:
+    """Приводит наименования параметров к отраслевому стандарту с заглавной буквы."""
+    if not key:
+        return ""
+    k = key.strip()
+    KEY_SYNONYMS = {
+        "диапазон": "Диапазон измерений",
+        "диапазон измерений": "Диапазон измерений",
+        "предел измерений": "Диапазон измерений",
+        "шкала": "Диапазон измерений",
+        "присоединение": "Присоединительная резьба",
+        "резьба": "Присоединительная резьба",
+        "штуцер": "Присоединительная резьба",
+        "класс точности": "Класс точности",
+        "погрешность": "Основная погрешность",
+        "приведенная погрешность": "Основная приведенная погрешность",
+        "основная приведенная погрешность": "Основная приведенная погрешность",
+        "выход": "Выходной сигнал",
+        "выходной сигнал": "Выходной сигнал",
+        "питание": "Напряжение питания",
+        "напряжение питания": "Напряжение питания",
+        "диаметр": "Диаметр корпуса",
+        "диаметр корпуса": "Диаметр корпуса",
+        "степень защиты": "Степень защиты",
+        "температура среды": "Температура измеряемой среды",
+        "температура измеряемой среды": "Температура измеряемой среды"
+    }
+    k_lower = k.lower()
+    if k_lower in KEY_SYNONYMS:
+        return KEY_SYNONYMS[k_lower]
+    return k[0].upper() + k[1:] if len(k) > 1 else k.upper()
+
+
 class TaxonomyAndGroundingValidator:
     """Детерминированный валидатор фактов, защиты от галлюцинаций и проверки полноты характеристик."""
 
@@ -179,11 +261,16 @@ class TaxonomyAndGroundingValidator:
 
         verified_specs: List[KeySpecItem] = []
         for item in key_specs:
+            norm_key = normalize_spec_key(item.parameter)
             val = item.value.strip()
+            
             # Допустимое отсутствие
             if val.lower() in ["данных нет", "не указано", "нет данных", "н/д"]:
-                verified_specs.append(KeySpecItem(parameter=item.parameter, value="данных нет"))
+                verified_specs.append(KeySpecItem(parameter=norm_key, value="данных нет"))
                 continue
+
+            # Нормализация технического значения (единицы, резьбы, тире, дроби)
+            norm_val = normalize_spec_value(val)
 
             # Извлекаем числа из значения (например "0-1,6 МПа" -> ["0", "1", "6"])
             numbers_in_val = re.findall(r"\d+", val)
@@ -192,11 +279,11 @@ class TaxonomyAndGroundingValidator:
                 found_numbers = all(num in normalized_corpus for num in numbers_in_val)
                 if not found_numbers:
                     verified_specs.append(KeySpecItem(
-                        parameter=item.parameter,
-                        value=f"{val} [⚠️ требует проверки источника]"
+                        parameter=norm_key,
+                        value=f"{norm_val} [⚠️ требует проверки источника]"
                     ))
                     continue
 
-            verified_specs.append(item)
+            verified_specs.append(KeySpecItem(parameter=norm_key, value=norm_val))
 
         return verified_specs

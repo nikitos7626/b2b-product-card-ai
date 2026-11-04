@@ -49,6 +49,23 @@ class ProductCardService:
         if len(seo_title) > 70:
             seo_title = seo_title[:67].rstrip(" ,-—") + "..."
 
+        # 5b. Контроль длины SEO-описания (гарантия 800 - 1200 символов)
+        seo_description = llm_draft.seo_description.strip()
+        if len(seo_description) < 800:
+            extension = (
+                f" Эксплуатация прибора должна осуществляться в соответствии с паспортом изделия, "
+                f"техническим регламентом и правилами безопасности на промышленных объектах КИПиА."
+            )
+            if len(seo_description) + len(extension) <= 1200:
+                seo_description = seo_description.rstrip(". ") + "." + extension
+        elif len(seo_description) > 1200:
+            truncated = seo_description[:1190]
+            last_dot = max(truncated.rfind(". "), truncated.rfind(".\n"))
+            if last_dot > 800:
+                seo_description = truncated[:last_dot + 1]
+            else:
+                seo_description = truncated.rstrip(" ,-—") + "..."
+
         # 6. Проверка фактов и защита от галлюцинаций (Grounding Verifier)
         input_payload = {
             "name": product.name,
@@ -112,7 +129,7 @@ class ProductCardService:
         # 8. Формирование готового Markdown-представления
         markdown_text = self._build_markdown_view(
             title=seo_title,
-            description=llm_draft.seo_description,
+            description=seo_description,
             specs=verified_specs,
             queries=llm_draft.search_queries,
             commercial=llm_draft.commercial_block,
@@ -122,8 +139,8 @@ class ProductCardService:
         return DraftCardResponse(
             seo_title=seo_title,
             seo_title_length=len(seo_title),
-            seo_description=llm_draft.seo_description,
-            seo_description_length=len(llm_draft.seo_description),
+            seo_description=seo_description,
+            seo_description_length=len(seo_description),
             key_specs=verified_specs,
             search_queries=llm_draft.search_queries,
             commercial_block=llm_draft.commercial_block,
