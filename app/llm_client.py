@@ -101,6 +101,8 @@ class UniversalLLMClient:
                     raise
                 raise RuntimeError(f"Ошибка вызова Gemini API: {e}")
 
+        raise RuntimeError("Не удалось получить ответ от Gemini API: исчерпаны все попытки подключения.")
+
     def _call_openai(self, system_prompt: str, user_prompt: str) -> LLMCardDraft:
         """Вызов OpenAI-совместимого API с автоматическими повторами."""
         url = f"{self.openai_base_url}/chat/completions"
@@ -151,6 +153,8 @@ class UniversalLLMClient:
                 if "LLM API" in str(e):
                     raise
                 raise RuntimeError(f"Ошибка при обработке ответа LLM: {e}")
+
+        raise RuntimeError("Не удалось получить ответ от OpenAI API: исчерпаны все попытки подключения.")
 
     def _clean_and_parse_json(self, text: str) -> Dict[str, Any]:
         """Очищает текст от возможных markdown-оберток (```json) и парсит JSON."""
