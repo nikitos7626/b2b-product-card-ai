@@ -33,5 +33,5 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
-    print(f"Запуск сервиса на http://{settings.app_host}:{settings.app_port}")
-    uvicorn.run("app.main:app", host=settings.app_host, port=settings.app_port, reload=True)
+    print("Запуск сервиса на http://127.0.0.1:8000")
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

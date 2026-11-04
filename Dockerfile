@@ -16,8 +16,6 @@ COPY . .
 
 # Переменные окружения по умолчанию
 ENV PYTHONUNBUFFERED=1
-ENV APP_HOST=0.0.0.0
-ENV APP_PORT=8000
 
 EXPOSE 8000
 
