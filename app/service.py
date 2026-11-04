@@ -1,3 +1,4 @@
+import re
 from typing import Dict, Any, List
 from app.schemas import ProductInput, DraftCardResponse, KeySpecItem, DataQualityReport
 from app.prompt import SYSTEM_PROMPT, build_user_prompt
@@ -57,11 +58,56 @@ class ProductCardService:
         }
         verified_specs = self.validator.verify_grounding(llm_draft.key_specs, input_payload)
 
-        # 7. Объединяем замеченные пропуски от валидатора и от LLM
-        combined_missing = list(dict.fromkeys(data_quality.missing_fields + llm_draft.llm_missing_fields))
-        data_quality.missing_fields = combined_missing
-        if combined_missing or data_quality.clarification_needed:
+        # 7. Фильтруем отсутствующие поля:
+        # Характеристики, которые уже извлечены в таблицу с реальным значением (не "данных нет"), НЕ считаются отсутствующими!
+        extracted_valid_keys = [
+            s.parameter.lower().strip()
+            for s in verified_specs
+            if s.value.strip().lower() not in ["данных нет", "нет данных", "н/д", "не указано"]
+        ]
+
+        # Любой параметр из verified_specs, у которого значение "данных нет"
+        specs_with_no_data = [
+            s.parameter.strip()
+            for s in verified_specs
+            if s.value.strip().lower() in ["данных нет", "нет данных", "н/д", "не указано"]
+        ]
+
+        synonym_stems = ["присоединен", "резьб", "штуцер", "диапазон", "шкал", "предел", "температур", "корпус", "диаметр", "погрешност", "точност", "питани", "выход"]
+
+        candidate_missing = data_quality.missing_fields + llm_draft.llm_missing_fields + specs_with_no_data
+        clean_missing: List[str] = []
+        seen_missing = set()
+
+        for m in candidate_missing:
+            m_clean = re.sub(r"\s*\(.*?\)", "", m).strip()
+            m_lower = m_clean.lower()
+            if not m_clean or m_lower in seen_missing:
+                continue
+
+            # Проверяем, есть ли уже этот параметр среди успешно извлеченных
+            is_extracted = False
+            for val_key in extracted_valid_keys:
+                if m_lower in val_key or val_key in m_lower:
+                    is_extracted = True
+                    break
+                for stem in synonym_stems:
+                    if stem in m_lower and stem in val_key:
+                        is_extracted = True
+                        break
+                if is_extracted:
+                    break
+
+            if not is_extracted:
+                seen_missing.add(m_lower)
+                clean_missing.append(m_clean)
+
+        data_quality.missing_fields = clean_missing
+        if clean_missing or data_quality.clarification_needed:
             data_quality.status = "requires_clarification"
+        else:
+            data_quality.status = "complete"
+            data_quality.recommendations = "Входные технические данные достаточны для публикации карточки."
 
         # 8. Формирование готового Markdown-представления
         markdown_text = self._build_markdown_view(

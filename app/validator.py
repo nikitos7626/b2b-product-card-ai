@@ -80,29 +80,60 @@ class TaxonomyAndGroundingValidator:
         required_raw = category_info.get("required_specs", "")
         required_list = [r.strip() for r in required_raw.split(";") if r.strip()]
 
+        SYNONYM_STEMS = {
+            "присоединен": ["резьб", "штуцер", "присоединен", "монтаж", "порт"],
+            "резьб": ["присоединен", "штуцер", "резьб"],
+            "диапазон": ["шкал", "предел", "диапазон"],
+            "температур": ["t°", "t ", "темп"],
+            "корпус": ["диаметр", "габарит", "размер", "корпус"],
+            "погрешност": ["точност", "класс"],
+            "питани": ["напряжен", "питани", "вольт", "в dc", "в ac"],
+            "выход": ["сигнал", "выход", "интерфейс"]
+        }
+
+        def matches_any_synonym(target_text: str, candidate_text: str) -> bool:
+            """Проверяет точные совпадения и совпадения по стемам синонимов."""
+            t_words = target_text.lower().split()
+            c_text = candidate_text.lower()
+            if any(w in c_text for w in t_words if len(w) > 3):
+                return True
+            for stem, synonyms in SYNONYM_STEMS.items():
+                if any(syn in target_text.lower() for syn in synonyms):
+                    if any(syn in c_text for syn in synonyms):
+                        return True
+            return False
+
+        all_specs_keys = " ".join(specs_lower.keys())
+
         for req in required_list:
-            req_lower = req.lower()
-            # Проверяем, упоминается ли параметр в ключах specs или тексте
-            found = False
-            for k in specs_lower.keys():
-                if any(part in k for part in req_lower.split()[:2]):
-                    found = True
-                    break
-            if not found and not any(part in all_input_text for part in req_lower.split()[:2]):
-                missing.append(f"{req} (критично для категории «{category_info.get('category_name')}»)")
+            clean_req = re.sub(r"\s*\(.*?\)", "", req).strip()
+            found = matches_any_synonym(clean_req, all_specs_keys) or matches_any_synonym(clean_req, all_input_text)
+            if not found:
+                missing.append(clean_req)
 
         # 2. Проверка критических условий эксплуатации
         critical_raw = category_info.get("critical_missing_checks", "")
         critical_list = [c.strip() for c in critical_raw.split(";") if c.strip()]
         for crit in critical_list:
-            crit_lower = crit.lower()
-            if not any(part in all_input_text for part in crit_lower.split()[:2]) and \
-               not any(part in " ".join(specs_lower.keys()) for part in crit_lower.split()[:2]):
-                missing.append(f"{crit} (условия эксплуатации / монтажа)")
+            clean_crit = re.sub(r"\s*\(.*?\)", "", crit).strip()
+            found = matches_any_synonym(clean_crit, all_specs_keys) or matches_any_synonym(clean_crit, all_input_text)
+            if not found:
+                missing.append(clean_crit)
 
         # 3. Проверка полей, требующих уточнения (нет единиц, размытые значения)
+        DIMENSIONLESS_FIELDS = {
+            "класс точности", "точность", "степень защиты", "ip", 
+            "климатическое исполнение", "гост", "количество", "число"
+        }
+
         for k, v in specs.items():
+            k_lower = k.lower().strip()
             val_str = str(v).strip()
+            
+            # Пропускаем безразмерные метрологические величины
+            if any(dim in k_lower for dim in DIMENSIONLESS_FIELDS):
+                continue
+
             # Число без единиц измерения (например "16", "100", "0.5")
             if re.match(r"^[-+]?\d+([.,]\d+)?$", val_str):
                 clarifications.append(f"Поле «{k}» имеет значение «{val_str}» без указания единицы измерения (МПа, мм, бар и т.д.)")

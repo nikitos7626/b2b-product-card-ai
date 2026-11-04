@@ -4,40 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:,">
-  <title>B2B AI-помощник подготовки карточек товаров КИПиА</title>
+  <title>КИПиА — Генератор B2B карточек товаров</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --border: #334155;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --primary: #38bdf8;
-      --primary-hover: #0284c7;
-      --accent: #6366f1;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
+      --bg: #090d16;
+      --panel: #111827;
+      --panel-border: #1f2937;
+      --card-bg: #151e2e;
+      --border: #243042;
+      --border-subtle: #1e293b;
+      
+      --text: #f1f5f9;
+      --text-muted: #8492a6;
+      --text-dim: #64748b;
+      
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --accent-subtle: rgba(56, 189, 248, 0.1);
+      
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
       padding: 24px;
+      -webkit-font-smoothing: antialiased;
     }
 
     .container {
-      max-width: 1400px;
+      max-width: 1360px;
       margin: 0 auto;
     }
 
+    /* Top Bar */
     header {
       margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
       padding-bottom: 16px;
+      border-bottom: 1px solid var(--panel-border);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -45,32 +54,53 @@
       gap: 12px;
     }
 
-    h1 { font-size: 1.5rem; font-weight: 700; color: #fff; }
-    h1 span { color: var(--primary); }
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--primary);
-      border: 1px solid rgba(56, 189, 248, 0.3);
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #0f172a;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    /* Layout */
     .layout {
       display: grid;
-      grid-template-columns: 1fr 1.2fr;
+      grid-template-columns: 460px 1fr;
       gap: 24px;
+      align-items: start;
     }
 
-    @media (max-width: 1024px) {
+    @media (max-width: 1080px) {
       .layout { grid-template-columns: 1fr; }
     }
 
+    /* Panels */
     .panel {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
       border-radius: 12px;
       padding: 20px;
       display: flex;
@@ -82,71 +112,104 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border);
       padding-bottom: 12px;
+      border-bottom: 1px solid var(--panel-border);
     }
 
     .panel-title {
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
+    /* Buttons & Controls */
     .btn-group {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
     button {
       cursor: pointer;
       font-family: inherit;
-      font-size: 0.875rem;
+      font-size: 0.825rem;
       font-weight: 500;
-      padding: 8px 14px;
-      border-radius: 8px;
+      padding: 7px 12px;
+      border-radius: 6px;
       border: 1px solid var(--border);
-      background: #334155;
-      color: #fff;
+      background: #1e293b;
+      color: var(--text);
       transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
 
-    button:hover { background: #475569; }
-    button.primary {
-      background: var(--primary);
-      color: #0f172a;
-      border: none;
-      font-weight: 600;
-      padding: 10px 18px;
+    button:hover {
+      background: #27354a;
+      border-color: #3b4d66;
     }
-    button.primary:hover { background: var(--primary-hover); }
-    button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    button.primary {
+      background: #0284c7;
+      color: #fff;
+      border: 1px solid #0369a1;
+      font-weight: 600;
+      padding: 10px 16px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    button.primary:hover {
+      background: #0ea5e9;
+    }
+
+    button.primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    button.pill {
+      font-size: 0.775rem;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    button.pill:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
 
     .tabs {
       display: flex;
-      gap: 4px;
-      background: #0f172a;
-      padding: 4px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-    .tab {
-      padding: 6px 12px;
+      background: #090d16;
+      padding: 2px;
       border-radius: 6px;
+      border: 1px solid var(--panel-border);
+    }
+
+    .tab {
+      padding: 4px 10px;
+      border-radius: 4px;
       background: transparent;
       border: none;
-      font-size: 0.8rem;
-      color: var(--text-muted);
+      font-size: 0.75rem;
+      color: var(--text-dim);
     }
+
     .tab.active {
-      background: #334155;
+      background: #1f2937;
       color: #fff;
       font-weight: 600;
     }
 
+    /* Forms */
     .form-group {
       display: flex;
       flex-direction: column;
@@ -154,154 +217,247 @@
     }
 
     label {
-      font-size: 0.825rem;
+      font-size: 0.775rem;
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
     }
 
     input, textarea {
       width: 100%;
-      padding: 10px 12px;
-      background: #0f172a;
+      padding: 8px 12px;
+      background: #090d16;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       color: #fff;
       font-family: inherit;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
+      transition: border-color 0.15s ease;
     }
 
     input:focus, textarea:focus {
       outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+      border-color: var(--accent);
     }
 
     textarea {
       resize: vertical;
-      min-height: 100px;
+      min-height: 90px;
+      line-height: 1.45;
     }
 
     .specs-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 32px;
-      gap: 8px;
-      margin-bottom: 8px;
+      grid-template-columns: 1fr 1fr 28px;
+      gap: 6px;
+      margin-bottom: 6px;
       align-items: center;
+    }
+
+    .specs-row input {
+      padding: 6px 10px;
+      font-size: 0.825rem;
     }
 
     .btn-remove {
       background: transparent;
       border: none;
-      color: var(--danger);
-      font-size: 1.2rem;
-      padding: 4px;
+      color: var(--text-dim);
+      font-size: 1.1rem;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* Output Card styling */
-    .result-section {
-      background: #0f172a;
+    .btn-remove:hover {
+      color: var(--danger);
+      background: transparent;
+    }
+
+    /* Output Section Cards */
+    .output-card {
+      background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 14px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
-    .section-label {
+    .output-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
     }
 
-    .counter-badge {
+    .output-title {
       font-size: 0.75rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: #334155;
-      color: #cbd5e1;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
-    .counter-badge.ok { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-    .counter-badge.warn { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
-    .title-box {
-      font-size: 1.1rem;
+    .count-badge {
+      font-size: 0.725rem;
+      font-family: monospace;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #090d16;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .count-badge.ok {
+      color: var(--success);
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+
+    .count-badge.warn {
+      color: var(--warning);
+      border-color: rgba(251, 191, 36, 0.3);
+    }
+
+    .text-title {
+      font-size: 1.05rem;
       font-weight: 600;
       color: #fff;
       line-height: 1.4;
     }
 
-    .desc-box {
-      font-size: 0.92rem;
-      color: #e2e8f0;
+    .text-desc {
+      font-size: 0.885rem;
+      color: #cbd5e1;
       line-height: 1.6;
     }
 
+    /* Specs Table */
     .specs-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
     }
 
-    .specs-table th, .specs-table td {
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
+    .specs-table th {
+      padding: 8px 10px;
       text-align: left;
+      font-weight: 600;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
     }
 
-    .specs-table th { color: var(--text-muted); font-weight: 600; background: #162032; }
-    .specs-table td:first-child { font-weight: 500; color: #cbd5e1; width: 45%; }
-    .specs-table td:last-child { color: #fff; }
+    .specs-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: top;
+    }
 
-    .tag-list {
+    .specs-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .specs-param {
+      color: var(--text-muted);
+      width: 45%;
+      font-weight: 500;
+    }
+
+    .specs-val {
+      color: #fff;
+    }
+
+    .specs-val.no-data {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    /* Search Queries */
+    .query-pills {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
     }
 
-    .query-tag {
-      background: #1e293b;
-      border: 1px solid #475569;
-      color: #38bdf8;
+    .query-pill {
+      font-size: 0.8rem;
       padding: 4px 10px;
+      background: #090d16;
+      border: 1px solid var(--border);
       border-radius: 6px;
-      font-size: 0.825rem;
-      font-family: monospace;
+      color: #7dd3fc;
     }
 
-    .alert {
+    /* Quality Note */
+    .quality-box {
       border-radius: 8px;
-      padding: 12px;
-      font-size: 0.875rem;
-      margin-bottom: 14px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 0.825rem;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      color: #fef3c7;
     }
 
-    .alert-warning {
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      color: #fde68a;
-    }
-    .alert-warning ul { padding-left: 20px; margin-top: 6px; }
-
-    .alert-success {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+    .quality-box.clean {
+      background: rgba(52, 211, 153, 0.06);
+      border-color: rgba(52, 211, 153, 0.2);
       color: #a7f3d0;
     }
 
-    .empty-state {
-      padding: 48px 16px;
-      text-align: center;
+    .quality-title {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .quality-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .quality-chip {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.775rem;
+      color: #fde68a;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    /* Commercial */
+    .comm-row {
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      line-height: 1.55;
+    }
+
+    .comm-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .comm-label {
+      font-weight: 600;
       color: var(--text-muted);
+      margin-right: 4px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      padding: 56px 20px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.875rem;
     }
 
     .spinner {
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.2);
       border-top-color: #fff;
       border-radius: 50%;
       width: 14px;
@@ -317,129 +473,112 @@
 
 <div class="container">
   <header>
-    <div>
-      <h1>AI-помощник <span>B2B карточек КИПиА</span></h1>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
-        Генерация SEO-контента и проверка технических параметров приборов
-      </p>
+    <div class="brand">
+      <div class="brand-icon">K</div>
+      <div>
+        <h1>Генератор карточек товаров КИПиА</h1>
+        <div class="subtitle">B2B каталог и спецификации</div>
+      </div>
     </div>
     <div class="btn-group">
-      <span class="badge">FastAPI + OpenAI API</span>
-      <span class="badge" style="color: #34d399; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1);">Zero Hallucinations</span>
+      <span style="font-size: 0.775rem; color: var(--text-dim); align-self: center;">Быстрый выбор:</span>
+      <button class="pill" onclick="loadSample(1)">Манометр DM 02</button>
+      <button class="pill" onclick="loadSample(2)">Датчик ОВЕН ПД100</button>
     </div>
   </header>
 
   <div class="layout">
-    <!-- ЛЕВАЯ КОЛОНКА: ВХОДНЫЕ ДАННЫЕ -->
+    <!-- ЛЕВАЯ КОЛОНКА: ВВОД ДАННЫХ -->
     <div class="panel">
       <div class="panel-header">
-        <span class="panel-title">Входные данные о приборе</span>
+        <span class="panel-title">Входные данные</span>
         <div class="tabs">
-          <button class="tab active" id="tab-form" onclick="setMode('form')">Веб-форма</button>
-          <button class="tab" id="tab-json" onclick="setMode('json')">Сырой JSON</button>
+          <button class="tab active" id="tab-form" onclick="setMode('form')">Форма</button>
+          <button class="tab" id="tab-json" onclick="setMode('json')">JSON</button>
         </div>
       </div>
 
-      <!-- Кнопки загрузки типовых образцов -->
-      <div>
-        <label style="margin-bottom: 6px; display: block;">Загрузить тестовый образец:</label>
-        <div class="btn-group">
-          <button onclick="loadSample(1)">⚡ Товар 1: Манометр DM 02 (Манотомь)</button>
-          <button onclick="loadSample(2)">⚡ Товар 2: Датчик ОВЕН ПД100-ДИ</button>
-        </div>
-      </div>
-
-      <!-- РЕЖИМ 1: ФОРМА -->
-      <div id="view-form" style="display: flex; flex-direction: column; gap: 14px;">
+      <!-- РЕЖИМ: ВЕБ-ФОРМА -->
+      <div id="view-form" style="display: flex; flex-direction: column; gap: 12px;">
         <div class="form-group">
           <label>Наименование прибора *</label>
-          <input type="text" id="f-name" placeholder="например: Манометр показывающий DM 02">
+          <input type="text" id="f-name" placeholder="Манометр показывающий DM 02">
         </div>
 
         <div class="form-group">
-          <label>Производитель / Завод</label>
-          <input type="text" id="f-manufacturer" placeholder="например: Манотомь">
+          <label>Производитель</label>
+          <input type="text" id="f-manufacturer" placeholder="Манотомь">
         </div>
 
         <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label>Характеристики (specs)</label>
-            <button type="button" onclick="addSpecRow()" style="padding: 4px 8px; font-size: 0.75rem;">+ Добавить поле</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label>Характеристики</label>
+            <button type="button" class="pill" onclick="addSpecRow()">+ Добавить</button>
           </div>
-          <div id="specs-container">
-            <!-- Динамические строки -->
-          </div>
+          <div id="specs-container"></div>
         </div>
 
         <div class="form-group">
-          <label>Текстовое описание / фрагмент паспорта</label>
-          <textarea id="f-desc" placeholder="Вставьте техническое описание, назначение или условия эксплуатации..."></textarea>
+          <label>Описание / фрагмент паспорта</label>
+          <textarea id="f-desc" placeholder="Назначение, принцип действия или фрагмент паспорта..."></textarea>
         </div>
       </div>
 
-      <!-- РЕЖИМ 2: СЫРОЙ JSON -->
+      <!-- РЕЖИМ: JSON -->
       <div id="view-json" style="display: none; flex-direction: column; gap: 10px;">
-        <label>JSON структура товара</label>
-        <textarea id="raw-json" style="font-family: monospace; min-height: 280px;" placeholder='{\n  "name": "...",\n  "manufacturer": "...",\n  "specs": { ... },\n  "description": "..."\n}'></textarea>
+        <label>JSON структура</label>
+        <textarea id="raw-json" style="font-family: monospace; min-height: 280px; font-size: 0.8rem;" placeholder='{\n  "name": "...",\n  "manufacturer": "...",\n  "specs": { ... },\n  "description": "..."\n}'></textarea>
       </div>
 
       <button class="primary" id="btn-submit" onclick="submitGenerate()">
         <span id="btn-spinner" class="spinner" style="display: none;"></span>
-        <span>Сформировать черновик карточки</span>
+        <span>Сформировать карточку</span>
       </button>
     </div>
 
-    <!-- ПРАВАЯ КОЛОНКА: ГОТОВЫЙ РЕЗУЛЬТАТ -->
+    <!-- ПРАВАЯ КОЛОНКА: РЕЗУЛЬТАТ -->
     <div class="panel">
       <div class="panel-header">
-        <span class="panel-title">Черновик карточки товара</span>
+        <span class="panel-title">Черновик карточки</span>
         <div class="btn-group" id="copy-buttons" style="display: none;">
-          <button onclick="copyFormat('markdown')">📋 Копировать Markdown</button>
-          <button onclick="copyFormat('json')">📋 Копировать JSON</button>
+          <button onclick="copyFormat('markdown')">Копировать Markdown</button>
+          <button onclick="copyFormat('json')">Копировать JSON</button>
         </div>
       </div>
 
-      <!-- Состояние ожидания -->
+      <!-- Заглушка до первого запуска -->
       <div id="empty-state" class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.4;">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-        <p>Выберите тестовый товар слева или введите свои параметры и нажмите <b>«Сформировать черновик»</b>.</p>
+        Выберите тестовый прибор или введите параметры и нажмите <b>«Сформировать карточку»</b>.
       </div>
 
-      <!-- Блок результатов -->
+      <!-- Результат генерации -->
       <div id="result-view" style="display: none;">
         
-        <!-- Алерт качества данных -->
-        <div id="quality-alert" class="alert"></div>
+        <!-- Заметка по качеству данных (показывается только при необходимости) -->
+        <div id="quality-box" class="quality-box" style="display: none;"></div>
 
-        <!-- 1. SEO Title -->
-        <div class="result-section">
-          <div class="section-label">
-            <span>SEO-заголовок (тег Title)</span>
-            <span id="title-counter" class="counter-badge ok">0 / 70</span>
+        <!-- SEO Title -->
+        <div class="output-card">
+          <div class="output-header">
+            <span class="output-title">SEO Title</span>
+            <span id="title-counter" class="count-badge">0 / 70</span>
           </div>
-          <div id="r-title" class="title-box"></div>
+          <div id="r-title" class="text-title"></div>
         </div>
 
-        <!-- 2. SEO Description -->
-        <div class="result-section">
-          <div class="section-label">
-            <span>SEO-описание для страницы каталога</span>
-            <span id="desc-counter" class="counter-badge ok">0 / 800–1200</span>
+        <!-- SEO Description -->
+        <div class="output-card">
+          <div class="output-header">
+            <span class="output-title">SEO Description</span>
+            <span id="desc-counter" class="count-badge">0 / 800–1200</span>
           </div>
-          <div id="r-desc" class="desc-box"></div>
+          <div id="r-desc" class="text-desc"></div>
         </div>
 
-        <!-- 3. Key Specs -->
-        <div class="result-section">
-          <div class="section-label">
-            <span>Структурированные характеристики</span>
-            <span class="badge" style="font-size: 0.7rem;">Grounded (без галлюцинаций)</span>
+        <!-- Ключевые характеристики -->
+        <div class="output-card">
+          <div class="output-header">
+            <span class="output-title">Характеристики</span>
           </div>
           <table class="specs-table">
             <thead>
@@ -449,22 +588,26 @@
           </table>
         </div>
 
-        <!-- 4. Search queries -->
-        <div class="result-section">
-          <div class="section-label">
-            <span>3–5 поисковых запросов (семантическое ядро)</span>
+        <!-- Поисковые запросы -->
+        <div class="output-card">
+          <div class="output-header">
+            <span class="output-title">Поисковые запросы</span>
           </div>
-          <div id="r-queries" class="tag-list"></div>
+          <div id="r-queries" class="query-pills"></div>
         </div>
 
-        <!-- 5. Commercial Block -->
-        <div class="result-section">
-          <div class="section-label">
-            <span>Commercial-блок для менеджера по продажам</span>
+        <!-- Коммерческий блок -->
+        <div class="output-card">
+          <div class="output-header">
+            <span class="output-title">Для менеджера по продажам</span>
           </div>
-          <div style="font-size: 0.88rem; line-height: 1.6;">
-            <p style="margin-bottom: 6px;"><b>🎯 Целевая аудитория:</b> <span id="r-audience"></span></p>
-            <p><b>⚙️ Решаемые задачи:</b> <span id="r-tasks"></span></p>
+          <div class="comm-row">
+            <span class="comm-label">Целевая аудитория:</span>
+            <span id="r-audience" style="color: #e2e8f0;"></span>
+          </div>
+          <div class="comm-row">
+            <span class="comm-label">Решаемые задачи:</span>
+            <span id="r-tasks" style="color: #e2e8f0;"></span>
           </div>
         </div>
 
@@ -477,7 +620,6 @@
 let currentMode = 'form';
 let lastResult = null;
 
-// Образцы товаров по умолчанию
 const SAMPLE_PRODUCTS = {
   1: {
     "name": "Манометр показывающий DM 02",
@@ -530,7 +672,7 @@ function addSpecRow(key = '', val = '') {
   row.innerHTML = `
     <input type="text" placeholder="Параметр" value="${escapeHtml(key)}" class="spec-key">
     <input type="text" placeholder="Значение" value="${escapeHtml(val)}" class="spec-val">
-    <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+    <button type="button" class="btn-remove" onclick="this.parentElement.remove()" title="Удалить">×</button>
   `;
   container.appendChild(row);
 }
@@ -581,13 +723,13 @@ async function submitGenerate() {
     try {
       payload = JSON.parse(document.getElementById('raw-json').value);
     } catch (e) {
-      alert('Ошибка: введен невалидный JSON!');
+      alert('Ошибка: некорректный JSON');
       return;
     }
   }
 
   if (!payload.name) {
-    alert('Пожалуйста, укажите наименование прибора!');
+    alert('Укажите наименование прибора!');
     return;
   }
 
@@ -605,14 +747,14 @@ async function submitGenerate() {
 
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.detail || 'Ошибка генерации');
+      throw new Error(err.detail || 'Сбой запроса');
     }
 
     const data = await res.json();
     lastResult = data;
     renderResult(data);
   } catch (err) {
-    alert('Сбой: ' + err.message);
+    alert('Ошибка: ' + err.message);
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -627,21 +769,25 @@ function renderResult(data) {
   // 1. Title
   document.getElementById('r-title').textContent = data.seo_title;
   const tBadge = document.getElementById('title-counter');
-  tBadge.textContent = `${data.seo_title_length} / 70 знаков`;
-  tBadge.className = `counter-badge ${data.seo_title_length <= 70 ? 'ok' : 'warn'}`;
+  tBadge.textContent = `${data.seo_title_length} / 70`;
+  tBadge.className = `count-badge ${data.seo_title_length <= 70 ? 'ok' : 'warn'}`;
 
-  // 2. Desc
+  // 2. Description
   document.getElementById('r-desc').textContent = data.seo_description;
   const dBadge = document.getElementById('desc-counter');
-  dBadge.textContent = `${data.seo_description_length} / 800–1200 знаков`;
-  dBadge.className = `counter-badge ${(data.seo_description_length >= 800 && data.seo_description_length <= 1200) ? 'ok' : 'warn'}`;
+  dBadge.textContent = `${data.seo_description_length} / 800–1200`;
+  dBadge.className = `count-badge ${(data.seo_description_length >= 800 && data.seo_description_length <= 1200) ? 'ok' : 'warn'}`;
 
-  // 3. Specs
+  // 3. Specs Table
   const specsTbody = document.getElementById('r-specs');
   specsTbody.innerHTML = '';
   data.key_specs.forEach(s => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${escapeHtml(s.parameter)}</td><td>${escapeHtml(s.value)}</td>`;
+    const isNoData = s.value.trim().toLowerCase() === 'данных нет';
+    tr.innerHTML = `
+      <td class="specs-param">${escapeHtml(s.parameter)}</td>
+      <td class="specs-val ${isNoData ? 'no-data' : ''}">${escapeHtml(s.value)}</td>
+    `;
     specsTbody.appendChild(tr);
   });
 
@@ -649,54 +795,56 @@ function renderResult(data) {
   const queriesBox = document.getElementById('r-queries');
   queriesBox.innerHTML = '';
   data.search_queries.forEach(q => {
-    const tag = document.createElement('span');
-    tag.className = 'query-tag';
-    tag.textContent = q;
-    queriesBox.appendChild(tag);
+    const pill = document.createElement('span');
+    pill.className = 'query-pill';
+    pill.textContent = q;
+    queriesBox.appendChild(pill);
   });
 
   // 5. Commercial
   document.getElementById('r-audience').textContent = data.commercial_block.target_audience;
   document.getElementById('r-tasks').textContent = data.commercial_block.tasks_solved;
 
-  // Quality Alert
-  const alertBox = document.getElementById('quality-alert');
+  // 6. Quality Box (только если действительно есть что сообщить)
+  const qBox = document.getElementById('quality-box');
   const q = data.data_quality;
-  if (q.status === 'requires_clarification') {
-    alertBox.className = 'alert alert-warning';
-    let html = `<b>⚠️ Внимание контент-менеджеру (Категория: «${escapeHtml(q.detected_category)}»):</b>`;
-    if (q.missing_fields && q.missing_fields.length > 0) {
-      html += `<div style="margin-top:4px;"><b>Отсутствуют важные характеристики:</b><ul>`;
-      q.missing_fields.forEach(m => html += `<li>${escapeHtml(m)}</li>`);
-      html += `</ul></div>`;
+  const hasMissing = q.missing_fields && q.missing_fields.length > 0;
+  const hasClarif = q.clarification_needed && q.clarification_needed.length > 0;
+
+  if (hasMissing || hasClarif) {
+    qBox.className = 'quality-box';
+    let html = `<div class="quality-title">Заметка контент-менеджеру (${escapeHtml(q.detected_category)}):</div>`;
+    
+    if (hasMissing) {
+      html += `<div style="font-size:0.775rem; color:#fde68a; margin-top:4px;">Не указаны в паспорте:</div>`;
+      html += `<div class="quality-items">`;
+      q.missing_fields.forEach(m => {
+        html += `<span class="quality-chip">${escapeHtml(m)}</span>`;
+      });
+      html += `</div>`;
     }
-    if (q.clarification_needed && q.clarification_needed.length > 0) {
-      html += `<div style="margin-top:4px;"><b>Требуют уточнения:</b><ul>`;
-      q.clarification_needed.forEach(c => html += `<li>${escapeHtml(c)}</li>`);
-      html += `</ul></div>`;
+
+    if (hasClarif) {
+      html += `<div style="font-size:0.775rem; color:#fde68a; margin-top:6px;">Требуют уточнения единиц:</div>`;
+      html += `<div class="quality-items">`;
+      q.clarification_needed.forEach(c => {
+        html += `<span class="quality-chip">${escapeHtml(c)}</span>`;
+      });
+      html += `</div>`;
     }
-    if (q.recommendations) {
-      html += `<p style="margin-top:6px; font-style: italic;">Совет: ${escapeHtml(q.recommendations)}</p>`;
-    }
-    alertBox.innerHTML = html;
-    alertBox.style.display = 'block';
+
+    qBox.innerHTML = html;
+    qBox.style.display = 'block';
   } else {
-    alertBox.className = 'alert alert-success';
-    alertBox.innerHTML = `<b>✅ Данные полные:</b> все обязательные параметры для категории «${escapeHtml(q.detected_category)}» присутствуют во входном запросе.`;
-    alertBox.style.display = 'block';
+    qBox.style.display = 'none';
   }
 }
 
 function copyFormat(fmt) {
   if (!lastResult) return;
-  let text = '';
-  if (fmt === 'markdown') {
-    text = lastResult.markdown_card;
-  } else if (fmt === 'json') {
-    text = JSON.stringify(lastResult, null, 2);
-  }
+  let text = fmt === 'markdown' ? lastResult.markdown_card : JSON.stringify(lastResult, null, 2);
   navigator.clipboard.writeText(text).then(() => {
-    alert(`Черновик успешно скопирован в буфер обмена (${fmt.toUpperCase()})!`);
+    alert(`Скопировано в буфер обмена (${fmt.toUpperCase()})`);
   });
 }
 
@@ -710,7 +858,6 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-// Загрузка образца 1 по умолчанию при старте
 window.addEventListener('DOMContentLoaded', () => {
   loadSample(1);
 });
