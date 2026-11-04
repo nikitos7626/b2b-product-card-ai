@@ -136,6 +136,15 @@ class ProductCardService:
             quality=data_quality
         )
 
+        # 9. Формирование микроразметки Schema.org Product (по стандартам /seo-ecommerce)
+        schema_org_data = self._build_schema_org(
+            title=seo_title,
+            description=seo_description,
+            manufacturer=product.manufacturer,
+            category=data_quality.detected_category,
+            specs=verified_specs
+        )
+
         return DraftCardResponse(
             seo_title=seo_title,
             seo_title_length=len(seo_title),
@@ -145,7 +154,8 @@ class ProductCardService:
             search_queries=llm_draft.search_queries,
             commercial_block=llm_draft.commercial_block,
             data_quality=data_quality,
-            markdown_card=markdown_text
+            markdown_card=markdown_text,
+            schema_org=schema_org_data
         )
 
     def _build_markdown_view(
@@ -200,6 +210,50 @@ class ProductCardService:
             lines.append(f"\n*Рекомендация:* {quality.recommendations}")
 
         return "\n".join(lines)
+
+    def _build_schema_org(
+        self,
+        title: str,
+        description: str,
+        manufacturer: str,
+        category: str,
+        specs: List[KeySpecItem]
+    ) -> Dict[str, Any]:
+        """
+        Генерирует микроразметку Schema.org Product (JSON-LD) по спецификации /seo-ecommerce.
+        Включает базовые атрибуты Google Merchant и массив характеристик additionalProperty.
+        """
+        additional_props = [
+            {
+                "@type": "PropertyValue",
+                "name": s.parameter,
+                "value": s.value
+            }
+            for s in specs
+            if s.value and s.value.strip().lower() not in ["данных нет", "нет данных", "не указано", "н/д"]
+        ]
+
+        schema: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": title,
+            "description": description[:300] + ("..." if len(description) > 300 else ""),
+            "category": category,
+            "brand": {
+                "@type": "Brand",
+                "name": manufacturer or "Не указан"
+            },
+            "offers": {
+                "@type": "Offer",
+                "priceCurrency": "RUB",
+                "availability": "https://schema.org/InStock",
+                "itemCondition": "https://schema.org/NewCondition"
+            }
+        }
+        if additional_props:
+            schema["additionalProperty"] = additional_props
+
+        return schema
 
 
 card_service = ProductCardService()

@@ -87,3 +87,4 @@ class DraftCardResponse(BaseModel):
     commercial_block: CommercialBlock
     data_quality: DataQualityReport
     markdown_card: str
+    schema_org: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Микроразметка Schema.org Product (JSON-LD)")

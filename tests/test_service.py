@@ -191,6 +191,11 @@ def test_full_pipeline_generation():
     assert len(res.commercial_block.target_audience) > 10
     assert "# " in res.markdown_card
 
+    # 5. Микроразметка Schema.org Product (/seo-ecommerce)
+    assert res.schema_org["@type"] == "Product"
+    assert res.schema_org["brand"]["name"] == "Манотомь"
+    assert len(res.schema_org["additionalProperty"]) > 0
+
 
 def test_api_health_endpoint(client):
     """Проверка эндпоинта /api/health."""
