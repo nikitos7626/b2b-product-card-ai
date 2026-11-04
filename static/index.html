@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>B2B AI-помощник подготовки карточек товаров КИПиА</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --accent: #6366f1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    h1 { font-size: 1.5rem; font-weight: 700; color: #fff; }
+    h1 span { color: var(--primary); }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #334155;
+      color: #fff;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button:hover { background: #475569; }
+    button.primary {
+      background: var(--primary);
+      color: #0f172a;
+      border: none;
+      font-weight: 600;
+      padding: 10px 18px;
+    }
+    button.primary:hover { background: var(--primary-hover); }
+    button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: #0f172a;
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .tab {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .tab.active {
+      background: #334155;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .specs-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 32px;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .btn-remove {
+      background: transparent;
+      border: none;
+      color: var(--danger);
+      font-size: 1.2rem;
+      padding: 4px;
+    }
+
+    /* Output Card styling */
+    .result-section {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .section-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+
+    .counter-badge {
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #334155;
+      color: #cbd5e1;
+    }
+    .counter-badge.ok { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .counter-badge.warn { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+    .title-box {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.4;
+    }
+
+    .desc-box {
+      font-size: 0.92rem;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .specs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .specs-table th, .specs-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .specs-table th { color: var(--text-muted); font-weight: 600; background: #162032; }
+    .specs-table td:first-child { font-weight: 500; color: #cbd5e1; width: 45%; }
+    .specs-table td:last-child { color: #fff; }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .query-tag {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #38bdf8;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.825rem;
+      font-family: monospace;
+    }
+
+    .alert {
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.875rem;
+      margin-bottom: 14px;
+    }
+
+    .alert-warning {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fde68a;
+    }
+    .alert-warning ul { padding-left: 20px; margin-top: 6px; }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #a7f3d0;
+    }
+
+    .empty-state {
+      padding: 48px 16px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>AI-помощник <span>B2B карточек КИПиА</span></h1>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+        Генерация SEO-контента и проверка технических параметров приборов
+      </p>
+    </div>
+    <div class="btn-group">
+      <span class="badge">FastAPI + OpenAI API</span>
+      <span class="badge" style="color: #34d399; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1);">Zero Hallucinations</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- ЛЕВАЯ КОЛОНКА: ВХОДНЫЕ ДАННЫЕ -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Входные данные о приборе</span>
+        <div class="tabs">
+          <button class="tab active" id="tab-form" onclick="setMode('form')">Веб-форма</button>
+          <button class="tab" id="tab-json" onclick="setMode('json')">Сырой JSON</button>
+        </div>
+      </div>
+
+      <!-- Кнопки загрузки типовых образцов -->
+      <div>
+        <label style="margin-bottom: 6px; display: block;">Загрузить тестовый образец:</label>
+        <div class="btn-group">
+          <button onclick="loadSample(1)">⚡ Товар 1: Манометр DM 02 (Манотомь)</button>
+          <button onclick="loadSample(2)">⚡ Товар 2: Датчик ОВЕН ПД100-ДИ</button>
+        </div>
+      </div>
+
+      <!-- РЕЖИМ 1: ФОРМА -->
+      <div id="view-form" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group">
+          <label>Наименование прибора *</label>
+          <input type="text" id="f-name" placeholder="например: Манометр показывающий DM 02">
+        </div>
+
+        <div class="form-group">
+          <label>Производитель / Завод</label>
+          <input type="text" id="f-manufacturer" placeholder="например: Манотомь">
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label>Характеристики (specs)</label>
+            <button type="button" onclick="addSpecRow()" style="padding: 4px 8px; font-size: 0.75rem;">+ Добавить поле</button>
+          </div>
+          <div id="specs-container">
+            <!-- Динамические строки -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Текстовое описание / фрагмент паспорта</label>
+          <textarea id="f-desc" placeholder="Вставьте техническое описание, назначение или условия эксплуатации..."></textarea>
+        </div>
+      </div>
+
+      <!-- РЕЖИМ 2: СЫРОЙ JSON -->
+      <div id="view-json" style="display: none; flex-direction: column; gap: 10px;">
+        <label>JSON структура товара</label>
+        <textarea id="raw-json" style="font-family: monospace; min-height: 280px;" placeholder='{\n  "name": "...",\n  "manufacturer": "...",\n  "specs": { ... },\n  "description": "..."\n}'></textarea>
+      </div>
+
+      <button class="primary" id="btn-submit" onclick="submitGenerate()">
+        <span id="btn-spinner" class="spinner" style="display: none;"></span>
+        <span>Сформировать черновик карточки</span>
+      </button>
+    </div>
+
+    <!-- ПРАВАЯ КОЛОНКА: ГОТОВЫЙ РЕЗУЛЬТАТ -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Черновик карточки товара</span>
+        <div class="btn-group" id="copy-buttons" style="display: none;">
+          <button onclick="copyFormat('markdown')">📋 Копировать Markdown</button>
+          <button onclick="copyFormat('json')">📋 Копировать JSON</button>
+        </div>
+      </div>
+
+      <!-- Состояние ожидания -->
+      <div id="empty-state" class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.4;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <p>Выберите тестовый товар слева или введите свои параметры и нажмите <b>«Сформировать черновик»</b>.</p>
+      </div>
+
+      <!-- Блок результатов -->
+      <div id="result-view" style="display: none;">
+        
+        <!-- Алерт качества данных -->
+        <div id="quality-alert" class="alert"></div>
+
+        <!-- 1. SEO Title -->
+        <div class="result-section">
+          <div class="section-label">
+            <span>SEO-заголовок (тег Title)</span>
+            <span id="title-counter" class="counter-badge ok">0 / 70</span>
+          </div>
+          <div id="r-title" class="title-box"></div>
+        </div>
+
+        <!-- 2. SEO Description -->
+        <div class="result-section">
+          <div class="section-label">
+            <span>SEO-описание для страницы каталога</span>
+            <span id="desc-counter" class="counter-badge ok">0 / 800–1200</span>
+          </div>
+          <div id="r-desc" class="desc-box"></div>
+        </div>
+
+        <!-- 3. Key Specs -->
+        <div class="result-section">
+          <div class="section-label">
+            <span>Структурированные характеристики</span>
+            <span class="badge" style="font-size: 0.7rem;">Grounded (без галлюцинаций)</span>
+          </div>
+          <table class="specs-table">
+            <thead>
+              <tr><th>Параметр</th><th>Значение</th></tr>
+            </thead>
+            <tbody id="r-specs"></tbody>
+          </table>
+        </div>
+
+        <!-- 4. Search queries -->
+        <div class="result-section">
+          <div class="section-label">
+            <span>3–5 поисковых запросов (семантическое ядро)</span>
+          </div>
+          <div id="r-queries" class="tag-list"></div>
+        </div>
+
+        <!-- 5. Commercial Block -->
+        <div class="result-section">
+          <div class="section-label">
+            <span>Commercial-блок для менеджера по продажам</span>
+          </div>
+          <div style="font-size: 0.88rem; line-height: 1.6;">
+            <p style="margin-bottom: 6px;"><b>🎯 Целевая аудитория:</b> <span id="r-audience"></span></p>
+            <p><b>⚙️ Решаемые задачи:</b> <span id="r-tasks"></span></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentMode = 'form';
+let lastResult = null;
+
+// Образцы товаров по умолчанию
+const SAMPLE_PRODUCTS = {
+  1: {
+    "name": "Манометр показывающий DM 02",
+    "manufacturer": "Манотомь",
+    "specs": {
+      "диапазон измерений": "0–1,6 МПа",
+      "класс точности": "1,5",
+      "присоединение": "G1/2",
+      "диаметр корпуса": "100 мм"
+    },
+    "description": "Прибор предназначен для измерения избыточного давления жидких и газообразных некристаллизующихся сред, неагрессивных к медным сплавам. Применяется в системах отопления, водоснабжения, насосных станциях и котельных установках."
+  },
+  2: {
+    "name": "Преобразователь давления ОВЕН ПД100-ДИ1,6-111-0,5",
+    "manufacturer": "ОВЕН",
+    "specs": {
+      "диапазон измерений": "0...1,6 МПа",
+      "тип давления": "избыточное",
+      "выходной сигнал": "4...20 мА",
+      "основная приведенная погрешность": "±0,5 %",
+      "напряжение питания": "12...36 В DC",
+      "присоединение": "M20×1,5"
+    },
+    "description": "Микропроцессорный датчик давления с металлической измерительной мембраной из нержавеющей стали AISI 316L и унифицированным аналоговым выходом 4-20 мА. Предназначен для работы в системах автоматического регулирования и управления технологическими процессами на объектах ЖКХ, водоканалах, теплопунктах и котельных."
+  }
+};
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('tab-form').classList.toggle('active', mode === 'form');
+  document.getElementById('tab-json').classList.toggle('active', mode === 'json');
+  document.getElementById('view-form').style.display = mode === 'form' ? 'flex' : 'none';
+  document.getElementById('view-json').style.display = mode === 'json' ? 'flex' : 'none';
+  
+  if (mode === 'json') {
+    const payload = gatherFormPayload();
+    document.getElementById('raw-json').value = JSON.stringify(payload, null, 2);
+  } else {
+    try {
+      const parsed = JSON.parse(document.getElementById('raw-json').value);
+      populateForm(parsed);
+    } catch(e) {}
+  }
+}
+
+function addSpecRow(key = '', val = '') {
+  const container = document.getElementById('specs-container');
+  const row = document.createElement('div');
+  row.className = 'specs-row';
+  row.innerHTML = `
+    <input type="text" placeholder="Параметр" value="${escapeHtml(key)}" class="spec-key">
+    <input type="text" placeholder="Значение" value="${escapeHtml(val)}" class="spec-val">
+    <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+  `;
+  container.appendChild(row);
+}
+
+function populateForm(data) {
+  document.getElementById('f-name').value = data.name || '';
+  document.getElementById('f-manufacturer').value = data.manufacturer || '';
+  document.getElementById('f-desc').value = data.description || '';
+  
+  const container = document.getElementById('specs-container');
+  container.innerHTML = '';
+  if (data.specs) {
+    for (const [k, v] of Object.entries(data.specs)) {
+      addSpecRow(k, v);
+    }
+  }
+}
+
+function gatherFormPayload() {
+  const specs = {};
+  const rows = document.querySelectorAll('.specs-row');
+  rows.forEach(r => {
+    const k = r.querySelector('.spec-key').value.trim();
+    const v = r.querySelector('.spec-val').value.trim();
+    if (k) specs[k] = v;
+  });
+
+  return {
+    name: document.getElementById('f-name').value.trim(),
+    manufacturer: document.getElementById('f-manufacturer').value.trim(),
+    specs: specs,
+    description: document.getElementById('f-desc').value.trim()
+  };
+}
+
+function loadSample(id) {
+  const sample = SAMPLE_PRODUCTS[id];
+  if (!sample) return;
+  populateForm(sample);
+  document.getElementById('raw-json').value = JSON.stringify(sample, null, 2);
+}
+
+async function submitGenerate() {
+  let payload;
+  if (currentMode === 'form') {
+    payload = gatherFormPayload();
+  } else {
+    try {
+      payload = JSON.parse(document.getElementById('raw-json').value);
+    } catch (e) {
+      alert('Ошибка: введен невалидный JSON!');
+      return;
+    }
+  }
+
+  if (!payload.name) {
+    alert('Пожалуйста, укажите наименование прибора!');
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit');
+  const spinner = document.getElementById('btn-spinner');
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Ошибка генерации');
+    }
+
+    const data = await res.json();
+    lastResult = data;
+    renderResult(data);
+  } catch (err) {
+    alert('Сбой: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+function renderResult(data) {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('result-view').style.display = 'block';
+  document.getElementById('copy-buttons').style.display = 'flex';
+
+  // 1. Title
+  document.getElementById('r-title').textContent = data.seo_title;
+  const tBadge = document.getElementById('title-counter');
+  tBadge.textContent = `${data.seo_title_length} / 70 знаков`;
+  tBadge.className = `counter-badge ${data.seo_title_length <= 70 ? 'ok' : 'warn'}`;
+
+  // 2. Desc
+  document.getElementById('r-desc').textContent = data.seo_description;
+  const dBadge = document.getElementById('desc-counter');
+  dBadge.textContent = `${data.seo_description_length} / 800–1200 знаков`;
+  dBadge.className = `counter-badge ${(data.seo_description_length >= 800 && data.seo_description_length <= 1200) ? 'ok' : 'warn'}`;
+
+  // 3. Specs
+  const specsTbody = document.getElementById('r-specs');
+  specsTbody.innerHTML = '';
+  data.key_specs.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(s.parameter)}</td><td>${escapeHtml(s.value)}</td>`;
+    specsTbody.appendChild(tr);
+  });
+
+  // 4. Queries
+  const queriesBox = document.getElementById('r-queries');
+  queriesBox.innerHTML = '';
+  data.search_queries.forEach(q => {
+    const tag = document.createElement('span');
+    tag.className = 'query-tag';
+    tag.textContent = q;
+    queriesBox.appendChild(tag);
+  });
+
+  // 5. Commercial
+  document.getElementById('r-audience').textContent = data.commercial_block.target_audience;
+  document.getElementById('r-tasks').textContent = data.commercial_block.tasks_solved;
+
+  // Quality Alert
+  const alertBox = document.getElementById('quality-alert');
+  const q = data.data_quality;
+  if (q.status === 'requires_clarification') {
+    alertBox.className = 'alert alert-warning';
+    let html = `<b>⚠️ Внимание контент-менеджеру (Категория: «${escapeHtml(q.detected_category)}»):</b>`;
+    if (q.missing_fields && q.missing_fields.length > 0) {
+      html += `<div style="margin-top:4px;"><b>Отсутствуют важные характеристики:</b><ul>`;
+      q.missing_fields.forEach(m => html += `<li>${escapeHtml(m)}</li>`);
+      html += `</ul></div>`;
+    }
+    if (q.clarification_needed && q.clarification_needed.length > 0) {
+      html += `<div style="margin-top:4px;"><b>Требуют уточнения:</b><ul>`;
+      q.clarification_needed.forEach(c => html += `<li>${escapeHtml(c)}</li>`);
+      html += `</ul></div>`;
+    }
+    if (q.recommendations) {
+      html += `<p style="margin-top:6px; font-style: italic;">Совет: ${escapeHtml(q.recommendations)}</p>`;
+    }
+    alertBox.innerHTML = html;
+    alertBox.style.display = 'block';
+  } else {
+    alertBox.className = 'alert alert-success';
+    alertBox.innerHTML = `<b>✅ Данные полные:</b> все обязательные параметры для категории «${escapeHtml(q.detected_category)}» присутствуют во входном запросе.`;
+    alertBox.style.display = 'block';
+  }
+}
+
+function copyFormat(fmt) {
+  if (!lastResult) return;
+  let text = '';
+  if (fmt === 'markdown') {
+    text = lastResult.markdown_card;
+  } else if (fmt === 'json') {
+    text = JSON.stringify(lastResult, null, 2);
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    alert(`Черновик успешно скопирован в буфер обмена (${fmt.toUpperCase()})!`);
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Загрузка образца 1 по умолчанию при старте
+window.addEventListener('DOMContentLoaded', () => {
+  loadSample(1);
+});
+</script>
+
+</body>
+</html>

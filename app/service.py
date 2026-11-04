@@ -1,0 +1,142 @@
+from typing import Dict, Any, List
+from app.schemas import ProductInput, DraftCardResponse, KeySpecItem, DataQualityReport
+from app.prompt import SYSTEM_PROMPT, build_user_prompt
+from app.validator import TaxonomyAndGroundingValidator
+from app.llm_client import UniversalLLMClient
+
+
+class ProductCardService:
+    """Сервис генерации черновика карточки товара B2B."""
+
+    def __init__(self):
+        self.validator = TaxonomyAndGroundingValidator()
+        self.llm_client = UniversalLLMClient()
+
+    def generate_product_card(self, product: ProductInput) -> DraftCardResponse:
+        """Полный конвейер генерации и валидации черновика карточки."""
+        
+        # 1. Определение категории прибора в таксономии
+        category_info = self.validator.match_category(product.name, product.description)
+        
+        # 2. Анализ полноты входных данных
+        data_quality = self.validator.analyze_data_quality(
+            name=product.name,
+            manufacturer=product.manufacturer or "",
+            specs=product.specs or {},
+            description=product.description or "",
+            category_info=category_info
+        )
+
+        # 3. Формирование промпта
+        user_prompt = build_user_prompt(
+            name=product.name,
+            manufacturer=product.manufacturer or "",
+            specs=product.specs or {},
+            description=product.description or "",
+            detected_category=category_info.get("category_name", ""),
+            required_specs_hint=category_info.get("required_specs", "")
+        )
+
+        # 4. Вызов LLM
+        llm_draft = self.llm_client.generate_draft(
+            system_prompt=SYSTEM_PROMPT,
+            user_prompt=user_prompt
+        )
+
+        # 5. Проверка длины заголовка (гарантия <= 70 символов)
+        seo_title = llm_draft.seo_title.strip()
+        if len(seo_title) > 70:
+            seo_title = seo_title[:67].rstrip(" ,-—") + "..."
+
+        # 6. Проверка фактов и защита от галлюцинаций (Grounding Verifier)
+        input_payload = {
+            "name": product.name,
+            "manufacturer": product.manufacturer,
+            "specs": product.specs,
+            "description": product.description
+        }
+        verified_specs = self.validator.verify_grounding(llm_draft.key_specs, input_payload)
+
+        # 7. Объединяем замеченные пропуски от валидатора и от LLM
+        combined_missing = list(dict.fromkeys(data_quality.missing_fields + llm_draft.llm_missing_fields))
+        data_quality.missing_fields = combined_missing
+        if combined_missing or data_quality.clarification_needed:
+            data_quality.status = "requires_clarification"
+
+        # 8. Формирование готового Markdown-представления
+        markdown_text = self._build_markdown_view(
+            title=seo_title,
+            description=llm_draft.seo_description,
+            specs=verified_specs,
+            queries=llm_draft.search_queries,
+            commercial=llm_draft.commercial_block,
+            quality=data_quality
+        )
+
+        return DraftCardResponse(
+            seo_title=seo_title,
+            seo_title_length=len(seo_title),
+            seo_description=llm_draft.seo_description,
+            seo_description_length=len(llm_draft.seo_description),
+            key_specs=verified_specs,
+            search_queries=llm_draft.search_queries,
+            commercial_block=llm_draft.commercial_block,
+            data_quality=data_quality,
+            markdown_card=markdown_text
+        )
+
+    def _build_markdown_view(
+        self,
+        title: str,
+        description: str,
+        specs: List[KeySpecItem],
+        queries: List[str],
+        commercial: Any,
+        quality: DataQualityReport
+    ) -> str:
+        """Генерирует чистый структурированный Markdown черновика для копирования."""
+        lines = [
+            f"# {title}",
+            "",
+            "## Описание товара",
+            description,
+            "",
+            "## Ключевые технические характеристики",
+            "| Параметр | Значение |",
+            "| :--- | :--- |"
+        ]
+        for s in specs:
+            lines.append(f"| {s.parameter} | {s.value} |")
+
+        lines.extend([
+            "",
+            "## Поисковые запросы для оптимизации страницы",
+        ])
+        for q in queries:
+            lines.append(f"- `{q}`")
+
+        lines.extend([
+            "",
+            "## Коммерческий блок для менеджера по продажам",
+            f"**Целевая аудитория:** {commercial.target_audience}",
+            "",
+            f"**Решаемые задачи:** {commercial.tasks_solved}",
+            ""
+        ])
+
+        if quality.missing_fields or quality.clarification_needed:
+            lines.append("## ⚠️ Требует внимания контент-менеджера")
+            if quality.missing_fields:
+                lines.append("**Отсутствующие критические поля:**")
+                for m in quality.missing_fields:
+                    lines.append(f"- {m}")
+            if quality.clarification_needed:
+                lines.append("**Поля, требующие уточнения:**")
+                for c in quality.clarification_needed:
+                    lines.append(f"- {c}")
+            lines.append(f"\n*Рекомендация:* {quality.recommendations}")
+
+        return "\n".join(lines)
+
+
+card_service = ProductCardService()
