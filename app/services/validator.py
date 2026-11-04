@@ -26,10 +26,10 @@ def normalize_spec_value(val: str) -> str:
     v = re.sub(r"\b0\s*[-–—.]+\s*20\s*(?:ма|ma)\b", "0...20 мА", v, flags=re.IGNORECASE)
     v = re.sub(r"\b0\s*[-–—.]+\s*10\s*(?:в|v)\b", "0...10 В", v, flags=re.IGNORECASE)
 
-    # 3. Давление: МПа, кПа, бар
-    v = re.sub(r"(\d+)\s*[-–—]\s*(\d+([.,]\d+)?)\s*мпа", lambda m: f"{m.group(1)}–{m.group(2).replace('.', ',')} МПа", v, flags=re.IGNORECASE)
-    v = re.sub(r"(\d+)\s*[-–—]\s*(\d+([.,]\d+)?)\s*кпа", lambda m: f"{m.group(1)}–{m.group(2).replace('.', ',')} кПа", v, flags=re.IGNORECASE)
-    v = re.sub(r"(\d+([.,]\d+)?)\s*мпа", lambda m: f"{m.group(1).replace('.', ',')} МПа", v, flags=re.IGNORECASE)
+    # 3. Давление: МПа, кПа, бар (нормализация диапазонов строго через тире: 0–1,6 МПа)
+    v = re.sub(r"(\d+)\s*(?:[-–—]|\.{2,3})\s*(\d+([.,]\d+)?)\s*мпа", lambda m: f"{m.group(1)}–{m.group(2).replace('.', ',')} МПа", v, flags=re.IGNORECASE)
+    v = re.sub(r"(\d+)\s*(?:[-–—]|\.{2,3})\s*(\d+([.,]\d+)?)\s*кпа", lambda m: f"{m.group(1)}–{m.group(2).replace('.', ',')} кПа", v, flags=re.IGNORECASE)
+    v = re.sub(r"(\d+)\s*(?:[-–—]|\.{2,3})\s*(\d+([.,]\d+)?)\s*бар\b", lambda m: f"{m.group(1)}–{m.group(2).replace('.', ',')} бар", v, flags=re.IGNORECASE)
     v = re.sub(r"(\d+([.,]\d+)?)\s*кпа", lambda m: f"{m.group(1).replace('.', ',')} кПа", v, flags=re.IGNORECASE)
     v = re.sub(r"(\d+([.,]\d+)?)\s*бар\b", lambda m: f"{m.group(1).replace('.', ',')} бар", v, flags=re.IGNORECASE)
 

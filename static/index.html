@@ -89,13 +89,13 @@
     /* Layout */
     .layout {
       display: grid;
-      grid-template-columns: 600px 1fr;
+      grid-template-columns: 640px 1fr;
       gap: 28px;
       align-items: start;
     }
 
     @media (max-width: 1200px) {
-      .layout { grid-template-columns: 520px 1fr; gap: 20px; }
+      .layout { grid-template-columns: 560px 1fr; gap: 20px; }
     }
 
     @media (max-width: 980px) {
@@ -254,15 +254,17 @@
 
     .specs-row {
       display: grid;
-      grid-template-columns: 1.8fr 1.2fr 28px;
+      grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.1fr) 28px;
       gap: 8px;
       margin-bottom: 6px;
       align-items: center;
     }
 
     .specs-row input {
-      padding: 7px 10px;
-      font-size: 0.85rem;
+      padding: 7px 9px;
+      font-size: 0.8125rem;
+      min-width: 0;
+      width: 100%;
     }
 
     .btn-remove {
@@ -641,7 +643,7 @@ const SAMPLE_PRODUCTS = {
     "name": "Преобразователь давления ОВЕН ПД100-ДИ1,6-111-0,5",
     "manufacturer": "ОВЕН",
     "specs": {
-      "диапазон измерений": "0...1,6 МПа",
+      "диапазон измерений": "0–1,6 МПа",
       "тип давления": "избыточное",
       "выходной сигнал": "4...20 мА",
       "основная приведенная погрешность": "±0,5 %",
